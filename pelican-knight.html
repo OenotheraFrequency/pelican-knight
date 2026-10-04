@@ -249,7 +249,7 @@ body.c7-training #tutorialHint{display:none!important}body.c7-training.c7-boss #
     <p class="keys">WASD/方向键 骑车 · J/鼠标 射击(自动瞄准) · 空格/Shift/K 冲刺 · C 技能<br>
     Q 切换主副手 · E 拾取/购买/锻造 · Y 遥遥领先(15⚡→随机+3%攻/速5s) · M 音乐 · P 暂停</p>
   </div>
-  <div id="diffRow"><b>难度</b><div id="diffWrap"><input id="diffSlider" type="range" min="0" max="200" step="5" value="50"><div id="diffTicks"><i style="left:0%">轻松</i><i style="left:25%">普通</i><i style="left:50%">地狱</i><i style="left:100%">地狱+100%</i></div></div><span id="diffLabel"></span></div>
+  <div id="diffRow"><b>难度</b><div id="diffWrap"><input id="diffSlider" type="range" min="0" max="300" step="5" value="50"><div id="diffTicks"><i style="left:0%">轻松</i><i style="left:16.7%">普通</i><i style="left:33.3%">地狱</i><i style="left:66.7%">地狱+100%</i><i style="left:100%">地狱+200%</i></div></div><span id="diffLabel"></span></div>
   <div id="aimRow"><b>瞄准</b><span data-a="auto" class="on">自动</span><span data-a="manual">手动(鼠标)</span></div>
   <div id="metaRow"></div>
   <p class="big" id="startHint">按任意键 进入地牢</p>
@@ -1180,7 +1180,7 @@ addEventListener('keydown', e => {
     if (codexOpen) { setCodex(false); return; }
     if (k === 'c') { setCodex(true); return; }
     if (k === 'l' && loadSaveData()) { resumeRun(); return; }
-    if (k === 't') { diffPct = [0, 50, 100, 150, 200].find(v => v > diffPct) ?? 0; syncDiff(); return; }
+    if (k === 't') { diffPct = [0, 50, 100, 150, 200, 250, 300].find(v => v > diffPct) ?? 0; syncDiff(); return; }
     if (k === 'd') { const d = new Date(); diffPct = 100; syncDiff(); startRun(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); return; }
     startRun(); return;
   }
@@ -1200,7 +1200,7 @@ addEventListener('keydown', e => {
   }
   if (k === 'n' && state === 'win') { startNG(); return; }
   if (k === 'r' && (state === 'dead' || state === 'win')) { startRun(); return; }
-  if (k === 't' && (state === 'dead' || state === 'win')) { diffPct = [0, 50, 100, 150, 200].find(v => v > diffPct) ?? 0; syncDiff(); return; }
+  if (k === 't' && (state === 'dead' || state === 'win')) { diffPct = [0, 50, 100, 150, 200, 250, 300].find(v => v > diffPct) ?? 0; syncDiff(); return; }
   if (k === 'e') interactQ = true;
   if (k === 'q') swapQ = true;
   if ((k === 'c' || k === 'v') && state === 'play') skillQ = true;
@@ -1248,7 +1248,7 @@ bindBtn($('btnE'), () => { interactQ = true; }, null);
 bindBtn($('btnSwap'), () => { swapQ = true; }, null);
 bindBtn($('btnSkill'), () => { skillQ = true; }, null);
 // difficulty slider + map reveal button
-// diffPct: 0=轻松 50=普通 100=地狱, up to 200 (地狱+100%). dm() = 0..4 continuous tier
+// diffPct: 0=轻松 50=普通 100=地狱, up to 300 (地狱+200%). dm() = 0..6 continuous tier
 let diffPct = 50, mapPing = 0, mapDirty = true;
 const dm = () => diffPct / 50;
 const dLerp = (a, b, c) => { const d = dm(); return d <= 1 ? a + (b - a) * d : b + (c - b) * (d - 1); };
@@ -1655,6 +1655,7 @@ Object.assign(ETYPES, {
   v_skater:{name:'逐浪鳐',hp:22,r:18,sp:32,color:'#a8addf',gun:0,pat:'skate',voyageAI:true},
   v_warden:{name:'潮汐观测者',hp:780,r:45,sp:20,color:'#91d4d5',gun:1,pat:'warden',boss:1,voyageAI:true}
 });
+for (const etk in ETYPES) ETYPES[etk].hp *= ETYPES[etk].boss ? 5 : 2;
 const MOB_NAMES = { v_lancer:'潮汐长枪卫',v_beacon:'回响灯笼',v_skater:'逐浪鳐',v_warden:'潮汐观测者', 
   slime: '史莱姆', bat: '洞穴蝠', crab: '岩蟹', urchin: '海胆', puffer: '河豚', goblin: '小妖',
   wraith: '怨灵', shotgun: '炮手', totem: '图腾柱', octo: '章鱼', mimic: '宝箱怪', shield: '盾卫',
@@ -2559,7 +2560,7 @@ function killEnemy(e) {
     if (e.burst) for (let i = 0; i < 8; i++) spawnEB(e.x, e.y, i / 8 * TAU + 0.2, 185, 5);
     if (e.type === 'icebeast') hazards.push({ k: 'ice', x: e.x, y: e.y, r: 55, life: 6, warn: 0.3 });
     if (e.type === 'voidspawn' && !e.mini) {
-      for (let i = 0; i < 2; i++) { const a = rnd(TAU); enemies.push({ type: 'voidspawn', x: e.x + Math.cos(a) * 20, y: e.y + Math.sin(a) * 20, hp: Math.round(6 + floor * 1.4), maxhp: Math.round(6 + floor * 1.4), r: 9, sp: e.sp * 1.6, color: e.color, mini: 1, ft: 1, flash: 0, ph: rnd(TAU), cyc: 0, vx: 0, vy: 0, touchT: 0, spawnT: 0.3 }); }
+      for (let i = 0; i < 2; i++) { const a = rnd(TAU); enemies.push({ type: 'voidspawn', x: e.x + Math.cos(a) * 20, y: e.y + Math.sin(a) * 20, hp: Math.round((6 + floor * 1.4) * 2), maxhp: Math.round((6 + floor * 1.4) * 2), r: 9, sp: e.sp * 1.6, color: e.color, mini: 1, ft: 1, flash: 0, ph: rnd(TAU), cyc: 0, vx: 0, vy: 0, touchT: 0, spawnT: 0.3 }); }
       parts.push({ k: 'poof', x: e.x, y: e.y, vx: 0, vy: 0, life: 0.4, c: '#8a7ac8', r: 14 });
       hiss(0.12, 0.1, 1200);
     }
@@ -2831,7 +2832,7 @@ function sanitizeSaveData(s) {
   if (!Number.isInteger(s.floor) || s.floor < 1 || s.floor > FINAL_FLOOR) return null;
   const o = { floor: s.floor };
   o.runSeed = fin(s.runSeed) ? s.runSeed : 1;
-  o.diffPct = fin(s.diffPct) ? clamp(s.diffPct, 0, 200) : fin(s.diff) ? clamp(s.diff * 50, 0, 200) : 50; // legacy 'diff' field migration
+  o.diffPct = fin(s.diffPct) ? clamp(s.diffPct, 0, 300) : fin(s.diff) ? clamp(s.diff * 50, 0, 300) : 50; // legacy 'diff' field migration
   o.kills = fin(s.kills) ? Math.max(0, Math.round(s.kills)) : 0;
   o.coins = fin(s.coins) ? Math.max(0, Math.round(s.coins)) : 0;
   o.revives = fin(s.revives) ? Math.max(0, Math.round(s.revives)) : 0;
@@ -2900,7 +2901,7 @@ function resumeRun() {
   if (!s) return false;
   Lighthouse.prepareRestore(s.lighthouse); Confluence.prepareRestore();
   Tide.loading=true;
-  runSeed = s.runSeed || 1; floor = s.floor; diffPct = s.diffPct ?? Math.min(200, (s.diff ?? 1) * 50); kills = s.kills; coins = s.coins; revives = s.revives || 0; syncDiff();
+  runSeed = s.runSeed || 1; floor = s.floor; diffPct = s.diffPct ?? Math.min(300, (s.diff ?? 1) * 50); kills = s.kills; coins = s.coins; revives = s.revives || 0; syncDiff();
   combo = 0; comboT = 0; floorT = s.floorT || 0; bounty = s.bounty || pick(BOUNTIES); bountyOk = s.bountyOk !== false;
   floorBiome = s.fbiome || {};
   Object.assign(p, { x: W / 2, y: H / 2 + 60, hp: 6, maxhp: 6, armor: 4, maxarmor: 4, energy: 170, maxenergy: 170,
@@ -3984,6 +3985,8 @@ function update(dt) {
   if(nearestService!=='garage')nearShed=false;
   if(nearestService!=='item')nearIt=null;if(nearestService!=='forge')nearAnvil=false;
   if(nearestService!=='spring')nearSpring=false;if(nearestService!=='npc')nearNpc=null;if(nearestService!=='ally')nearAlly=false;
+  const portalPress = interactQ && portal && hyp(portal.x - p.x, portal.y - p.y) < 66;
+  if (portalPress) interactQ = false;
   if(nearShed&&interactQ){interactQ=false;if(Garage.open())return;}
   $('btnE').style.display = (nearIt || nearShed || nearAnvil || nearSpring || nearNpc || nearAlly) ? 'grid' : 'none';
   if (nearNpc && (interactQ)) {
@@ -4445,7 +4448,7 @@ function update(dt) {
   if (portal) {
     portal.t += dt;
     // state may have flipped to 'revive'/'dead' mid-frame (death on the portal tile) — never transition
-    if (state === 'play' && portalInteract && !nearIt && !nearNpc && !nearAlly && !nearAnvil && !nearSpring && hyp(portal.x - p.x, portal.y - p.y) < 66) {
+    if (state === 'play' && portalInteract && hyp(portal.x - p.x, portal.y - p.y) < 66) {
       if(Lighthouse.data.pending) { Lighthouse.requestPanel('relic');return; }
       if(Lighthouse.isTrial)return nextFloor();
       if (floor >= FINAL_FLOOR) return winGame();
@@ -6956,17 +6959,17 @@ const Garage = (() => {
   const FORMS = {
     bicycle: {name:'经典自行车', subtitle:'一切冒险的起点', role:'轻装骑行', price:0, color:'#9bd9c6',
       desc:'熟悉的车架，仍能一路改装到终点。所有零件在更换载具后保留。', stats:{}, effects:['无额外形态加成','零件成长完整生效']},
-    touring: {name:'精工旅行车', subtitle:'不换初心，只换更好的零件', role:'均衡 · 灵活', price:32, color:'#e6c28b',
+    touring: {name:'精工旅行车', subtitle:'不换初心，只换更好的零件', role:'均衡 · 灵活', price:96, color:'#e6c28b',
       desc:'升级轮组、旅行货架与轻量车架。继续骑自行车，也是一条完整的成长路线。', stats:{speed:.03, dash:.03, handling:.06}, effects:['巡航速度 +3%','冲刺冷却 −3%','加速与制动 +6%']},
-    motorcycle: {name:'潮汐摩托', subtitle:'气密动力，缓缓点火', role:'巡航 · 速度', price:32, color:'#edab84',
+    motorcycle: {name:'潮汐摩托', subtitle:'气密动力，缓缓点火', role:'巡航 · 速度', price:96, color:'#edab84',
       desc:'水下密封动力舱驱动宽胎。直线巡航更快，转向稍显沉稳，不额外增加冲刺距离。', stats:{speed:.07, handling:-.05}, effects:['巡航速度 +7%','加速与制动 −5%']},
-    carpet: {name:'星纹飞毯', subtitle:'把星光织成下一段路', role:'能量 · 地形', price:32, color:'#c2aff1',
+    carpet: {name:'星纹飞毯', subtitle:'把星光织成下一段路', role:'能量 · 地形', price:96, color:'#c2aff1',
       desc:'贴地悬浮的星纹织物。减轻水洼与海草的拖行，不穿墙、不飞越障碍，也不免疫地面伤害。', stats:{speed:.03, energy:.08, terrain:.20}, effects:['巡航速度 +3%','自然能量回复 +8%','水洼 / 海草减速惩罚 −20%']},
-    skimmer: {name:'鳐翼滑板', subtitle:'收拢双翼，切过潮隙', role:'冲刺 · 机动', price:32, color:'#8ed8ea',
+    skimmer: {name:'鳐翼滑板', subtitle:'收拢双翼，切过潮隙', role:'冲刺 · 机动', price:96, color:'#8ed8ea',
       desc:'双翼稳定板配备小型水流推进器。冲刺更频繁，滑行惯性略大；反击窗口不变。', stats:{speed:.04, dash:.06, handling:-.04}, effects:['巡航速度 +4%','冲刺冷却 −6%','加速与制动 −4%']},
-    walker: {name:'寄居蟹步行机', subtitle:'慢一点，也能走得很远', role:'护甲 · 稳定', price:32, color:'#c4d69c',
+    walker: {name:'寄居蟹步行机', subtitle:'慢一点，也能走得很远', role:'护甲 · 稳定', price:96, color:'#c4d69c',
       desc:'四足壳体让骑士坐得更稳。提高脱战后的护甲回复速度，但不会提前开始回复，也不增加护甲上限。', stats:{speed:-.03, armor:.08, handling:.08}, effects:['巡航速度 −3%','自然护甲回复 +8%','加速与制动 +8%']},
-    pod: {name:'气泡潜航艇', subtitle:'带上灯，也带上行李', role:'补给 · 续航', price:32, color:'#b4d9e7',
+    pod: {name:'气泡潜航艇', subtitle:'带上灯，也带上行李', role:'补给 · 续航', price:96, color:'#b4d9e7',
       desc:'小型开舱潜航艇，以气泡动力收集沿途补给。透明罩只是外观，不提供额外护盾。', stats:{speed:.02, energy:.06, magnet:20}, effects:['巡航速度 +2%','自然能量回复 +6%','补给吸引半径 +20']}
   };
   const PARTS = {
@@ -6975,7 +6978,7 @@ const Garage = (() => {
     cell:{name:'循环组件',label:'CIRCULATION',glyph:'wave',color:'#b5c4ec',desc:'回收自然能量，并稍微扩大补给吸引范围；不放大技能返能。',per:'每级自然能量回复 +3% · 吸引半径 +4',stat:'energy',value:.03},
     guard:{name:'防护组件',label:'PROTECTION',glyph:'shield',color:'#c4d69c',desc:'维护护甲的自愈回路。不增加生命或护甲上限，不缩短脱战等待。',per:'每级自然护甲回复 +3%',stat:'armor',value:.03}
   };
-  const COSTS = [12,20,30];
+  const COSTS = [36,60,90];
   const fresh=()=>({form:'bicycle',owned:['bicycle'],parts:{drive:0,control:0,cell:0,guard:0},stage:0,voucher:true,revision:0,log:[]});
   let s=fresh(),api=null,cache=null;
   const has=(o,k)=>typeof k==='string'&&Object.prototype.hasOwnProperty.call(o,k);
@@ -7877,7 +7880,7 @@ requestAnimationFrame(tick);
     const curAf2 = isMain ? p.waf2 : p.offaf2;
     const wData = curW ? WEAPONS[curW] : null;
 
-    const upCosts = [15, 25, 40, 60, 80];
+    const upCosts = [45, 75, 120, 180, 240];
     const upCost = curLv < 5 ? upCosts[curLv] : 999;
     const canUp = curW && curLv < 5 && coins >= upCost;
 
@@ -8030,6 +8033,7 @@ requestAnimationFrame(tick);
             <button class="primary-btn" data-action="do-fuse" ${!canFuse ? 'disabled' : ''} style="padding:10px 24px">
               <span>${icon('star')} 开启共生重铸 · ${fusionCost} 金币</span>
             </button>
+            ${!canFuse && p.weapon && p.offw ? `<small style="width:100%;text-align:right;color:var(--muted)">${coins < fusionCost ? `金币不足，需要 ◉${fusionCost}` : '两把武器强化均已 +5，且未匹配专属配方'}</small>` : ''}
           </div>
         `;
       }
