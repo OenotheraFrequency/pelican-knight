@@ -8868,7 +8868,7 @@ requestAnimationFrame(tick);
   document.title='鹈鹕骑士 · 循光归航 6.1';
   document.querySelector('.edition').innerHTML='<i></i> 潮声协奏 · 6.1';
   document.querySelector('.card-kicker span').textContent='06.1 / CONFLUENCE';
-  document.querySelector('.tide-release').textContent='88 把武器 · 45 项天赋 · 11 种技能 · 7 种载具';
+  document.querySelector('.tide-release').textContent=`${Object.keys(WEAPONS).length} 把武器 · ${TKEYS.length} 项天赋 · ${Object.keys(SKILLS).length} 种技能 · 7 种载具`;
   byId('garageGuide').insertAdjacentHTML('afterend','<button id="confluenceGuide" class="voyage-guide-link">让装备相互呼应 <span>潮声协奏 · 构筑手册 ↗</span></button>');
   byId('confluenceGuide').onclick=()=>openPanel('confluence');
   byId('trainingBar').insertAdjacentHTML('beforeend','<button id="trainingConfluence">构筑试配 / 首领练习</button>');
